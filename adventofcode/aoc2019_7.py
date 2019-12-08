@@ -2,7 +2,6 @@ memory = '3,8,1001,8,10,8,105,1,0,0,21,38,55,72,93,118,199,280,361,442,99999,3,9
 
 from itertools import permutations
 from operator import add, mul, lt, eq
-from queue import Queue
 import aoc2019_5
 
 memory = [int(i) for i in memory.split(',')]
@@ -79,5 +78,4 @@ for permutation in permutations(range(5, 10)):
             max_output = max(e_output, max_output)
             #print()
             break
-
 print(max_output)

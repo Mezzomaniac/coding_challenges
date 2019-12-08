@@ -39,5 +39,6 @@ def run(memory, inputs=[]):
                 i += 3
         else:
             raise ValueError
-    
-print(run(memory, inputs))
+
+if __name__ == '__main__':
+    print(run(memory, inputs))
