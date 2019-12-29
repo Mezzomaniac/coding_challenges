@@ -4,7 +4,7 @@ test2 = '1102,34915192,34915192,7,4,7,99,0'
 test3 = '104,1125899906842624,99'
 #memory = test1
 
-from operator import add, mul, lt, eq
+'''from operator import add, mul, lt, eq
 from collections import deque
 
 def run(memory, inputs=[]):
@@ -73,7 +73,12 @@ class Memory:
     
     def __repr__(self):
         return f'Memory({self.memory}, {self.extra_memory})'
+'''
 
 memory = [int(i) for i in memory.split(',')]
 
-print(run(Memory(memory), [2]))
+'''if __name__ == '__main__':
+    print(run(Memory(memory1), [2]))'''
+    
+import aoc2019intcode
+print(aoc2019intcode.Intcode(memory2).run([2]))
