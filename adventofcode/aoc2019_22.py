@@ -122,14 +122,21 @@ deal with increment 9
 deal with increment 3
 cut -1'''
 
-test = 'deal with increment 4'
+test = '''deal with increment 5'''
+
+data = test
 
 from collections import deque
+import itertools
+from time import time
+import more_itertools
+import matplotlib
+import matplotlib.pyplot as plt
 
 def deal(deck, techniques):
     techniques = techniques.splitlines()
     for technique in techniques:
-        print(technique)
+        #print(technique)
         if technique.endswith('k'):
             deck.reverse()
         elif technique.startswith('c'):
@@ -137,30 +144,187 @@ def deal(deck, techniques):
             deck.rotate(-n)
         else:
             n = int(technique.split()[-1])
-            '''new = deque()
-            while len(new) < len(deck):
-                new.append(deck[0])
-                deck.rotate(n)
-            deck = new'''
-            new = {}
-            it = iter(deck)
-            i = 0
-            while len(new) < len(deck):
-                new[i] = next(it)
-                i = (i + n) % len(deck)
-            #print(new)
-            deck = deque(value for key, value in sorted(new.items()))
-        print(deck)
-        #print(deck[2020])
+            for card in list(deck):
+                deck[0] = card
+                deck.rotate(-n)
+        #print(deck)
+    #print(deck.index(2019))
+    #print(deck[2020])
     return deck
 
-deck = deque(range(10))
-deal(deck, test4)
+def newstack(deck):
+    deck.reverse()
+    return deck
+    #return reversed(deck)
+    #return more_itertools.always_reversible(deck)
+
+def cut_n(n, size=10007):
+    '''if n < 0:
+        n = size + n'''
+    def cut(deck):
+        deck.rotate(-n)
+        return deck
+        '''head = itertools.islice(deck, n)
+        body = itertools.islice(deck, n, None)
+        return itertools.chain(body, head)'''
+    return cut
+
+def increment_n(n):
+    def increment(deck):
+        for card in list(deck):
+            deck[0] = card
+            deck.rotate(-n)
+        return deck
+    return increment
+
+size = 119315717514047
+#size1 = 10007
+
+actions = []
+for technique in data.splitlines():
+    if technique.endswith('k'):
+        actions.append(newstack)
+    elif technique.startswith('c'):
+        n = int(technique.split()[-1])
+        actions.append(cut_n(n, size))
+    else:
+        n = int(technique.split()[-1])
+        actions.append(increment_n(n))
+
+def deal2(deck, actions):
+    for action in actions:
+        deck = action(deck)
+    #print(deck.index(2019))
+    return deck
+
+#deck = deque(range(10))
+#deal(deck, test4)
 #deck = deque(range(10007))
-#deck = deal(deck, data)
-#print(deck.index(2019))
+#t = time()
+#deal(deck, data)
+#print(time() - t)
+
+#deck = deque(range(10007))
+#t = time()
+#deck = deque(range(size))
+#deck = deal2(deck, actions)
+#print(list(deck))
+#print(time() - t)
+
+'''results = {3}
+deck = deque(range(23))
+for i in range(25):
+    deck = deal(deck, test4)
+    card = deck[3]
+    print(i, card)
+    results.add(card)'''
+
+#results = [2020]
+prev = 2020
+deck = deque(range(10007))
+for i in range(0):
+    #print(i)
+    deck = deal2(deck, actions)
+    card = deck[2020]
+    #if card in results:
+        #print(f'repeat at {i}')
+    #elif not i % 100:
+        #print(i)
+    #results.append(card)
+    print(card, card - prev)
+    prev = card
+#print()
+#print(results)
+#print(len(set(results)))
 
 '''deck = deque(range(119315717514047))
 for i in range(101741582076661):
-    print(deck[2020])
-    deck = deal(deck, data)'''
+    print(i)
+    deck = deal2(deck, actions)
+    #print()'''
+
+def newstacker_card(size):
+    def newstack_card(card):
+        return (size - card - 1) % size
+    return newstack_card
+
+def cut_n_card(n, size):
+    def cut_card(card):
+        return (card + n) % size
+    return cut_card
+
+def increment_n_card(n, size):
+    def increment_card(card):
+        '''for i in range(n):
+            if not (size * i + card) % n:
+                multiplier = i
+                break'''
+        #multiplier = ((-card) * size ** (n - 2)) % n
+        #return (size * multiplier + card) // n
+        return (size * (-card * size ** (n - 2) % n) + card) // n
+    return increment_card
+
+card_actions = []
+#card_actions1 = []
+for technique in reversed(data.splitlines()):
+    if technique.endswith('k'):
+        card_actions.append(newstacker_card(size))
+        #card_actions1.append(newstacker_card(size1))
+    elif technique.startswith('c'):
+        n = int(technique.split()[-1])
+        card_actions.append(cut_n_card(n, size))
+        #card_actions1.append(cut_n_card(n, size1))
+    else:
+        n = int(technique.split()[-1])
+        card_actions.append(increment_n_card(n, size))
+        #card_actions1.append(increment_n_card(n, size1))
+
+def solve(size, card, actions):
+    for action in actions:
+        card = action(card)
+    return card
+
+card = 2020
+#card1 = 2020
+#print(card)
+#print(deal2(deque(range(size)), actions)[card])
+#print(solve(size, card, card_actions))
+#cards = {card}
+#last = card
+#differences = set()
+#last_dif = 0
+#differences2 = set()
+try:
+    for i in range(101741582076661):
+    #for i in range(100):
+        #if not i % 100000:
+            #print(i)
+        card = solve(size, card, card_actions)
+        #card1 = solve(size1, card1, card_actions1)
+        '''difference = last - card
+        difference2 = last_dif - difference
+        card_repeat = card in cards
+        difference_repeat = difference in differences
+        difference2_repeat = difference2 in differences2
+        if card_repeat or difference_repeat or difference2_repeat:
+            print(i, card, difference, difference2, (card_repeat, difference_repeat, difference2_repeat))
+        cards.add(card)
+        differences.add(difference)
+        differences2.add(difference2)
+        last = card
+        last_dif = difference'''
+        print(i, card)#, card1, f'{card / size:.3}, {card1 / size1:.3}')
+except KeyboardInterrupt:
+    pass
+'''#else:
+    x, y = zip(*enumerate(cards))
+    fig, ax = plt.subplots()
+    ax.plot(x, y)
+    plt.show()'''
+
+def solve2(s, c):
+    
+    
+
+
+# https://www.reddit.com/r/adventofcode/comments/fgr4ml/2019_day_222_any_kind_soul_willing_to_help_find/
