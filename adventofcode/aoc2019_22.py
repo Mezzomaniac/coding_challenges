@@ -122,16 +122,17 @@ deal with increment 9
 deal with increment 3
 cut -1'''
 
-test = '''deal with increment 5'''
+test = '''deal with increment 3'''
 
-data = test
+#data = test
 
 from collections import deque
+from functools import lru_cache
 import itertools
 from time import time
 import more_itertools
-import matplotlib
-import matplotlib.pyplot as plt
+#import matplotlib
+#import matplotlib.pyplot as plt
 
 def deal(deck, techniques):
     techniques = techniques.splitlines()
@@ -179,6 +180,8 @@ def increment_n(n):
 
 size = 119315717514047
 #size1 = 10007
+
+shuffles = 101741582076661
 
 actions = []
 for technique in data.splitlines():
@@ -237,8 +240,8 @@ for i in range(0):
 #print(results)
 #print(len(set(results)))
 
-'''deck = deque(range(119315717514047))
-for i in range(101741582076661):
+'''deck = deque(range(size))
+for i in range(shuffles):
     print(i)
     deck = deal2(deck, actions)
     #print()'''
@@ -260,29 +263,28 @@ def increment_n_card(n, size):
                 multiplier = i
                 break'''
         #multiplier = ((-card) * size ** (n - 2)) % n
-        #return (size * multiplier + card) // n
-        return (size * (-card * size ** (n - 2) % n) + card) // n
+        multiplier = -card * pow_mod(size, n-2, n) % n
+        return (size * multiplier + card) // n
+        #return (size * (-card * size ** (n - 2) % n) + card) // n
     return increment_card
-
-card_actions = []
-#card_actions1 = []
-for technique in reversed(data.splitlines()):
-    if technique.endswith('k'):
-        card_actions.append(newstacker_card(size))
-        #card_actions1.append(newstacker_card(size1))
-    elif technique.startswith('c'):
-        n = int(technique.split()[-1])
-        card_actions.append(cut_n_card(n, size))
-        #card_actions1.append(cut_n_card(n, size1))
-    else:
-        n = int(technique.split()[-1])
-        card_actions.append(increment_n_card(n, size))
-        #card_actions1.append(increment_n_card(n, size1))
 
 def solve(size, card, actions):
     for action in actions:
         card = action(card)
     return card
+
+@lru_cache(maxsize=256)
+def pow_mod(x, n, m):
+    ''' Calculate x ** n % m using exponentiation by squaring
+    
+    See https://codeforces.com/blog/entry/72527'''
+    
+    if not n:
+        return 1
+    t = pow_mod(x, n//2, m)
+    if not n % 2:
+        return t * t % m
+    return t * t * x % m
 
 card = 2020
 #card1 = 2020
@@ -295,11 +297,11 @@ card = 2020
 #last_dif = 0
 #differences2 = set()
 try:
-    for i in range(101741582076661):
+    #for i in range(shuffles):
     #for i in range(100):
         #if not i % 100000:
             #print(i)
-        card = solve(size, card, card_actions)
+        #card = solve(size, card, card_actions)
         #card1 = solve(size1, card1, card_actions1)
         '''difference = last - card
         difference2 = last_dif - difference
@@ -313,7 +315,7 @@ try:
         differences2.add(difference2)
         last = card
         last_dif = difference'''
-        print(i, card)#, card1, f'{card / size:.3}, {card1 / size1:.3}')
+        #print(i, card)#, card1, f'{card / size:.3}, {card1 / size1:.3}')
 except KeyboardInterrupt:
     pass
 '''#else:
@@ -322,9 +324,32 @@ except KeyboardInterrupt:
     ax.plot(x, y)
     plt.show()'''
 
-def solve2(s, c):
-    
-    
+def parse_techniques(data, size):
+    actions = []
+    for technique in data.splitlines():
+        if technique.endswith('k'):
+            actions.append(newstacker_card(size))
+        elif technique.startswith('c'):
+            n = int(technique.split()[-1])
+            actions.append(cut_n_card(n, size))
+        else:
+            n = int(technique.split()[-1])
+            actions.append(increment_n_card(n, size))
+    return actions
+
+def solve2(size, card, techniques, shuffles):
+    actions = parse_techniques(techniques, size)
+    actions.reverse()
+    for i in range(shuffles):
+        if not i % 1000:
+            print(i)
+        for action in actions:
+            card = action(card)
+    return card
+
+print(solve2(size, card, data, shuffles))
 
 
 # https://www.reddit.com/r/adventofcode/comments/fgr4ml/2019_day_222_any_kind_soul_willing_to_help_find/
+
+# https://www.reddit.com/r/adventofcode/comments/ee56wh/2019_day_22_part_2_so_whats_the_purpose_of_this/
