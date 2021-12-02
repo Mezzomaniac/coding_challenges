@@ -1,4 +1,5 @@
 from http.cookiejar import Cookie
+from os.path import exists
 import requests
 from requests.cookies import RequestsCookieJar
 
@@ -7,8 +8,11 @@ cookiejar = RequestsCookieJar()
 cookiejar.set_cookie(cookie)
 
 def download(year, day):
+    filename = f'aoc{year}_{day}input.txt'
+    if exists(filename):
+        return
     text = requests.get(f'https://adventofcode.com/{year}/day/{day}/input', cookies=cookiejar).text
-    with open(f'aoc{year}_{day}input.txt', 'w') as input_file:
+    with open(filename, 'w') as input_file:
         input_file.write(text)
 
 
