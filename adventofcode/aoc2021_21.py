@@ -1,6 +1,4 @@
 from collections import defaultdict, deque, Counter
-#from copy import deepcopy
-from functools import lru_cache
 from itertools import product
 from pprint import pprint
 from queue import Queue
@@ -28,9 +26,9 @@ while max(scores) < 1000:
 print(total_rolls * min(scores))
 
 
-probabilities = Counter(sum(combo) for combo in product(range(1, 4), repeat=3))
+roll_probabilities = Counter(sum(combo) for combo in product(range(1, 4), repeat=3))
 
-class GameState:
+'''class GameState:
     
     def __init__(self, positions, scores, player):
         self.positions = positions
@@ -65,11 +63,6 @@ class GameState:
         return GameState(positions, scores, player)
 
 
-@lru_cache()
-def move(pos):
-    
-
-
 positions = [deque(range(1, 11)), deque(range(1, 11))]
 #positions[0].rotate(-8)  # 9
 #positions[1].rotate(-2)  # 3
@@ -93,7 +86,7 @@ while not frontier.empty():
         wins[winner] += universes[current]
         #print([f'{win:_}' for win in wins])
         continue
-    for roll_sum, probability in probabilities.items():
+    for roll_sum, probability in roll_probabilities.items():
         next = current.turn(roll_sum)
         probability *= universes[current]
         if next in universes:
@@ -106,19 +99,86 @@ while not frontier.empty():
     del universes[current]
     #pprint([(str(key), value) for key, value in universes.items()])
     #print()
-print(max(wins))
+print(max(wins))'''
 
 
 #>43_042_313_591
 
+'''coin_probabilities = {2: 1, 3: 2, 4: 1}
+coin_probabilities = {1: 1, 2: 1}
 
-'''def play(pos, score, turns):
-    turns_to_win = {}
-    turn += 1
-    for move, probability in probabilities.items():
-        pos += move
-        if pos > 10:
-            pos -= 10
-        score += pos
-        if score >= 21:
-            '''
+def turns_to_end_profile(start, board_size=10, win=21, move_probabilities=None):
+    if not move_probabilities:
+        move_probabilities = roll_probabilities
+    end_worlds = defaultdict(int)
+    pos_score_worlds = {(start, 0): 1}
+    turn = 0
+    #while any(score < win for pos, score in pos_score_worlds.keys()):
+    while pos_score_worlds:
+        turn += 1
+        new_pos_score_worlds = defaultdict(int)
+        for (pos, score), worlds in pos_score_worlds.items():
+            for move, probability in move_probabilities.items():
+                new_pos = pos + move
+                if new_pos > board_size:
+                    new_pos -= board_size
+                new_score = score + new_pos
+                new_worlds = worlds * probability
+                if new_score >= win:
+                    end_worlds[turn] += new_worlds
+                    continue
+                new_pos_score_worlds[(new_pos, new_score)] += new_worlds
+            pos_score_worlds = new_pos_score_worlds
+    return end_worlds
+
+def compare_profiles(starts, board_size=10, win=21, move_probabilities=None):
+    if not move_probabilities:
+        move_probabilities = roll_probabilities
+    p1_profile = turns_to_end_profile(starts[0], board_size, win, move_probabilities)
+    p2_profile = turns_to_end_profile(starts[1], board_size, win, move_probabilities)
+    #p1_profile = {2: 3, 3: 2}
+    #p2_profile = {2: 3, 3: 2}
+    print(p1_profile)
+    print(p2_profile)
+    rolls_per_turn = sum(move_probabilities.values())
+    #rolls_per_turn = 2
+    p1_wins = 0
+    p2_wins = 0
+    for turn in set(p1_profile.keys()) | set(p2_profile.keys()):
+        print(turn)
+        p1_wins += p1_profile[turn] * (rolls_per_turn ** (turn - 1) - sum(worlds * (turn - turns) for turns, worlds in p2_profile.items() if turns < turn))
+        p2_wins += p2_profile[turn] * (rolls_per_turn ** turn - sum(worlds * (turn - turns + 1) for turns, worlds in p1_profile.items() if turns <= turn))
+        print(p1_wins, p2_wins)
+    return max(p1_wins, p2_wins)
+
+#print(compare_profiles((2, 4), 5, 11, coin_probabilities))
+#print(compare_profiles((5, 5), 5, 5, coin_probabilities))
+
+#print(compare_profiles((4, 8)))
+#print(compare_profiles((9, 3)))'''
+
+state_worlds = {((4, 0), (8, 0)): 1}
+state_worlds = {((9, 0), (3, 0)): 1}
+wins = [0, 0]
+player = 0
+while state_worlds:
+    new_state_worlds = defaultdict(int)
+    for state, worlds in state_worlds.items():
+        pos, score = state[player]
+        for roll, probability in roll_probabilities.items():
+            new_pos = pos + roll
+            if new_pos > 10:
+                new_pos -= 10
+            new_score = score + new_pos
+            new_worlds = worlds * probability
+            if new_score >= 21:
+                wins[player] += new_worlds
+                continue
+            new_state = list(state)
+            new_state[player] = (new_pos, new_score)
+            new_state = tuple(new_state)
+            new_state_worlds[new_state] += new_worlds
+        state_worlds = new_state_worlds
+    player = not player
+print(wins)
+print(max(wins))
