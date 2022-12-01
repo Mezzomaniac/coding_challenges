@@ -7,11 +7,13 @@ cookie = Cookie(version=0, name='session', value='53616c7465645f5f4816c9ab84913b
 cookiejar = RequestsCookieJar()
 cookiejar.set_cookie(cookie)
 
+USER_AGENT = {"User-Agent": "github.com/Mezzomaniac/coding_challenges/adventofcode/downloader.py by themezj@hotmail.com"}
+
 def download(year, day, force_download=False):
     filename = f'aoc{year}_{day}input.txt'
     if exists(filename) and not force_download:
         return
-    text = requests.get(f'https://adventofcode.com/{year}/day/{day}/input', cookies=cookiejar).text
+    text = requests.get(f'https://adventofcode.com/{year}/day/{day}/input', cookies=cookiejar, headers=USER_AGENT).text
     with open(filename, 'w') as input_file:
         input_file.write(text)
 
