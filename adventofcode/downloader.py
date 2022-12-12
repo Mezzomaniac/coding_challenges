@@ -3,15 +3,15 @@ from os.path import exists
 import requests
 from requests.cookies import RequestsCookieJar
 
-cookie = Cookie(version=0, name='session', value='53616c7465645f5f4816c9ab84913b0a940d3243e151cf357e20448c24e6044725b148f57b2136bdd45685df50bcb10bbfe672e0225782b33a1474e73d7dae42', port=None, port_specified=False, domain='.adventofcode.com', domain_specified=True, domain_initial_dot=True, path='/', path_specified=True, secure=True, expires=1953553997, discard=False, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
+cookie = Cookie(version=0, name='session', value='53616c7465645f5f80451955aced2155292ba6ea93ccb14c83281616500c034cb6d67afd5a1509e3255dc71996e2b8ff29447cff93bf2c1ca76dab6e2366dd15', port=None, port_specified=False, domain='.adventofcode.com', domain_specified=True, domain_initial_dot=True, path='/', path_specified=True, secure=True, expires=1986185363, discard=False, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
 cookiejar = RequestsCookieJar()
 cookiejar.set_cookie(cookie)
 
 USER_AGENT = {"User-Agent": "github.com/Mezzomaniac/coding_challenges/adventofcode/downloader.py by themezj@hotmail.com"}
 
-def download(year, day, force_download=False):
+def download(year, day, force=False):
     filename = f'aoc{year}_{day}input.txt'
-    if exists(filename) and not force_download:
+    if exists(filename) and not force:
         return
     text = requests.get(f'https://adventofcode.com/{year}/day/{day}/input', cookies=cookiejar, headers=USER_AGENT).text
     with open(filename, 'w') as input_file:
@@ -44,8 +44,8 @@ def get_cookie():
         cookiejar = RequestsCookieJar()
         cookiejar.set_cookie(cookie)
         if 'differ' not in requests.get('https://adventofcode.com/2020/day/10/input', cookies=cookiejar).text:
-            found = cookie
-            print(found)
+            print(repr(cookie))
+            return cookie
 
 if __name__ == '__main__':
-    get_cookie()
+    cookie = get_cookie()
