@@ -21,7 +21,7 @@ print(data)
 
 class Valve:
     
-    def __init__(self, label, flow, tunnels):
+    def __init__(self, label: str, flow: int, tunnels: list):
         self.label = label
         self.flow = flow
         self.tunnels = tunnels
@@ -31,7 +31,7 @@ class Valve:
 
 class State:
     
-    def __init__(self, location, opened=None):
+    def __init__(self, location: str, opened: dict=None):
         self.location = location
         if opened is None:
             opened = {}
@@ -72,7 +72,10 @@ while not frontier.empty():
         minutes_explored = costs[current_state]
         print(minutes_explored)
     if costs[current_state] == 31 or len(current_state.opened) == number_of_valves_to_open:
-        most_flow = max(most_flow, total_flow(current_state.opened, 30))
+        flow = total_flow(current_state.opened, 30)
+        if flow > most_flow:
+            most_flow = flow
+            print(most_flow)
         continue
     next_cost = costs[current_state] + 1
     if valves[current_state.location].flow and current_state.location not in current_state.opened:
@@ -91,15 +94,16 @@ print(most_flow)
 
 class DoubleState:
     
-    def __init__(self, locations, opened=None):
+    def __init__(self, locations: tuple, opened: dict=None, minute: int=1):
         self.locations = locations
         if opened is None:
             opened = {}
         self.opened = opened
+        self.minute = minute
         self.flow = 0
     
     def __repr__(self):
-        return f'Valve({self.locations}, {self.opened})'
+        return f'Valve({self.locations}, {self.opened}, {self.minute})'
     
     def __hash__(self):
         return hash((frozenset(self.locations), tuple(self.opened.items())))
@@ -118,30 +122,34 @@ frontier = Queue()
 frontier.put(start)
 while not frontier.empty():
     current_state = frontier.get()
-    if costs[current_state] > minutes_explored:
-        minutes_explored = costs[current_state]
-        print(minutes_explored)
-    if costs[current_state] == 27 or len(current_state.opened) == number_of_valves_to_open:
+    minute = current_state.minute
+    if minute > minutes_explored:
+        minutes_explored = minute
+        print(minutes_explored, frontier.qsize(), len(costs))
+        #if minutes_explored > 9:
+            #costs = {state: cost for state, cost in costs.items() if cost > minutes_explored - 4}
+    if minute == 27 or len(current_state.opened) == number_of_valves_to_open:
         flow = total_flow(current_state.opened, 26)
         if flow > most_flow:
             most_flow = flow
-            print(most_flow)
+            print(most_flow, minute, len(current_state.opened))
         continue
-    next_cost = costs[current_state] + 1
+    next_cost = minute + 1
     partial_next_states = [set(), set()]
     for index, location in enumerate(current_state.locations):
         if valves[location].flow and location not in current_state.opened:
             partial_next_opened = current_state.opened.copy()
-            partial_next_opened[location] = costs[current_state]
+            partial_next_opened[location] = minute
             partial_next_state = State(location, partial_next_opened)
             partial_next_states[index].add(partial_next_state)
+            continue
         for next_location in valves[location].tunnels:
             partial_next_state = State(next_location, current_state.opened.copy())
             partial_next_states[index].add(partial_next_state)
     for partial_next_state1, partial_next_state2 in product(*partial_next_states):
         next_opened = partial_next_state1.opened.copy()
         next_opened.update(partial_next_state2.opened)
-        next_state = DoubleState((partial_next_state1.location, partial_next_state2.location), next_opened)
+        next_state = DoubleState((partial_next_state1.location, partial_next_state2.location), next_opened, next_cost)
         if next_state not in costs or next_cost < costs[next_state]:
             frontier.put(next_state)
             costs[next_state] = next_cost
@@ -156,37 +164,44 @@ frontier = PriorityQueue()
 frontier.put((1, start))
 while not frontier.empty():
     priority, current_state = frontier.get()
-    if costs[current_state] > minutes_explored:
-        minutes_explored = costs[current_state]
-        print(minutes_explored)
-    if costs[current_state] == 27 or len(current_state.opened) == number_of_valves_to_open:
+    minute = current_state.minute
+    if minute > minutes_explored:
+        minutes_explored = minute
+        print(minutes_explored, frontier.qsize(), len(costs))
+    if minute == 27 or len(current_state.opened) == number_of_valves_to_open:
         flow = current_state.flow
         if flow > most_flow:
             most_flow = flow
-            print(most_flow)
+            print(most_flow, minute, len(current_state.opened), frontier.qsize(), len(costs))
+            #costs = {state: cost for state, cost in costs.items() if cost < 22}
         continue
-    next_cost = costs[current_state] + 1
-    partial_next_states = [set(), set()]
+    next_cost = minute + 1
+    partial_next_states = [[], []]
     for index, location in enumerate(current_state.locations):
         if valves[location].flow and location not in current_state.opened:
             partial_next_opened = current_state.opened.copy()
-            partial_next_opened[location] = costs[current_state]
+            partial_next_opened[location] = minute
             partial_next_state = State(location, partial_next_opened)
-            partial_next_states[index].add(partial_next_state)
+            partial_next_states[index].append(partial_next_state)
+            continue
         for next_location in valves[location].tunnels:
             partial_next_state = State(next_location, current_state.opened.copy())
-            partial_next_states[index].add(partial_next_state)
+            partial_next_states[index].append(partial_next_state)
     for partial_next_state1, partial_next_state2 in product(*partial_next_states):
         next_opened = partial_next_state1.opened.copy()
         next_opened.update(partial_next_state2.opened)
-        next_state = DoubleState((partial_next_state1.location, partial_next_state2.location), next_opened)
+        next_state = DoubleState((partial_next_state1.location, partial_next_state2.location), next_opened, next_cost)
         if next_state not in costs or next_cost < costs[next_state]:
-            flow = total_flow(next_state.opened, 26)
+            flow = total_flow(next_opened, 26)
             next_state.flow = flow
-            priority = -flow
+            num_valves_opened = len(next_opened)
+            step_value = sum(valves[location].flow for location in next_state.locations if location not in next_opened)
+            priority = next_cost - 1.7 * num_valves_opened - step_value - 0.0015 * flow
+            #priority = (-flow, -step_value, -num_valves_opened, next_cost)
             frontier.put((priority, next_state))
             costs[next_state] = next_cost
             #print(next_state)
+            if len(costs) + frontier.qsize() > 3100000:
+                costs = {state: cost for state, cost in costs.items() if cost < 20}
+                print('a')
 print(most_flow)
-
-# > 1477
