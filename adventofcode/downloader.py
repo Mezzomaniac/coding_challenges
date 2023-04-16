@@ -35,7 +35,7 @@ def get_cookie():
     form['password'].value = input('password?')
     browser.submit_form(form)
     form2 = browser.get_form()
-    form2['otp'].value = input('otp?')
+    form2['app_otp'].value = input('otp?')
     browser.submit_form(form2)
     cookies = browser.session.cookies
     #print(cookies)
@@ -45,7 +45,7 @@ def get_cookie():
         cookiejar.set_cookie(cookie)
         if 'differ' not in requests.get('https://adventofcode.com/2020/day/10/input', cookies=cookiejar).text:
             print(repr(cookie))
-            return cookie
+            return browser
 
 if __name__ == '__main__':
-    cookie = get_cookie()
+    browser = get_cookie()
