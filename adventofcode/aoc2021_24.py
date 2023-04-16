@@ -327,7 +327,7 @@ for order in product((1, 0), repeat=7):
     z = alu()
     if not z:
         print(tests)
-# 99995969919326
+
 
 '''0 inp w  # A 0 0 0
 1 mul x 0  # A 0 0 0
