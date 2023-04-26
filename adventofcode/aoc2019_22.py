@@ -122,17 +122,21 @@ deal with increment 9
 deal with increment 3
 cut -1'''
 
-test = '''deal with increment 3'''
+test = '''deal with increment 3
+deal into new stack
+deal with increment 1
+cut -2
+cut 5
+deal into new stack'''
 
 #data = test
+print(data)
 
-from collections import deque
+from collections import deque, namedtuple
 from functools import lru_cache
 import itertools
 from time import time
 import more_itertools
-#import matplotlib
-#import matplotlib.pyplot as plt
 
 def deal(deck, techniques):
     techniques = techniques.splitlines()
@@ -247,16 +251,19 @@ for i in range(shuffles):
     #print()'''
 
 def newstacker_card(size):
+    '''create inverse function (ie what card is in the position, not where is the card) for dealing a new stack'''
     def newstack_card(card):
         return (size - card - 1) % size
     return newstack_card
 
 def cut_n_card(n, size):
+    '''create inverse function (ie what card is in the position, not where is the card) for cutting the deck'''
     def cut_card(card):
         return (card + n) % size
     return cut_card
 
 def increment_n_card(n, size):
+    '''create inverse function (ie what card is in the position, not where is the card) for dealing with an increment'''
     def increment_card(card):
         '''for i in range(n):
             if not (size * i + card) % n:
@@ -273,9 +280,13 @@ def solve(size, card, actions):
         card = action(card)
     return card
 
-@lru_cache(maxsize=256)
+#@lru_cache(maxsize=256)
+#def pow_mod(x, n, m):
+    #return pow(x, n, m)
+
+@lru_cache(maxsize=2048)
 def pow_mod(x, n, m):
-    ''' Calculate x ** n % m using exponentiation by squaring
+    ''' Calculate x ** n % m using exponentiation by squaring for when the numbers are too big to use pow()
     
     See https://codeforces.com/blog/entry/72527'''
     
@@ -287,42 +298,6 @@ def pow_mod(x, n, m):
     return t * t * x % m
 
 card = 2020
-#card1 = 2020
-#print(card)
-#print(deal2(deque(range(size)), actions)[card])
-#print(solve(size, card, card_actions))
-#cards = {card}
-#last = card
-#differences = set()
-#last_dif = 0
-#differences2 = set()
-try:
-    #for i in range(shuffles):
-    #for i in range(100):
-        #if not i % 100000:
-            #print(i)
-        #card = solve(size, card, card_actions)
-        #card1 = solve(size1, card1, card_actions1)
-        '''difference = last - card
-        difference2 = last_dif - difference
-        card_repeat = card in cards
-        difference_repeat = difference in differences
-        difference2_repeat = difference2 in differences2
-        if card_repeat or difference_repeat or difference2_repeat:
-            print(i, card, difference, difference2, (card_repeat, difference_repeat, difference2_repeat))
-        cards.add(card)
-        differences.add(difference)
-        differences2.add(difference2)
-        last = card
-        last_dif = difference'''
-        #print(i, card)#, card1, f'{card / size:.3}, {card1 / size1:.3}')
-except KeyboardInterrupt:
-    pass
-'''#else:
-    x, y = zip(*enumerate(cards))
-    fig, ax = plt.subplots()
-    ax.plot(x, y)
-    plt.show()'''
 
 def parse_techniques(data, size):
     actions = []
@@ -338,18 +313,82 @@ def parse_techniques(data, size):
     return actions
 
 def solve2(size, card, techniques, shuffles):
+    t = time()
     actions = parse_techniques(techniques, size)
     actions.reverse()
+    #seen = {card}
+    #seen = {card: 0}
     for i in range(shuffles):
-        if not i % 1000:
-            print(i)
+        #if not i % 100000:
+            #print(i, time() - t)
         for action in actions:
             card = action(card)
+            #print(card)
+        #if card == 2020:
+            #print(i)
+        #if card in seen:
+        #print(i, card)
+            #print(i, card, seen[card])
+        #seen.add(card)
+        #seen[card] = i
     return card
 
-print(solve2(size, card, data, shuffles))
+#print(solve2(size, card, data, shuffles))
 
+#print(solve2(10, 0, data, 10))
 
 # https://www.reddit.com/r/adventofcode/comments/fgr4ml/2019_day_222_any_kind_soul_willing_to_help_find/
 
-# https://www.reddit.com/r/adventofcode/comments/ee56wh/2019_day_22_part_2_so_whats_the_purpose_of_this/
+#for card in range(11):
+    #print(solve2(11, card, data, 1))
+
+#size = 7
+#shuffles = 1
+#card = 5
+
+factor = 1
+constant = 0
+for technique in reversed(data.splitlines()):
+    print(technique)
+    if technique.endswith('k'):
+        factor = -factor % size
+        constant = (-constant - 1) % size
+    elif technique.startswith('c'):
+        n = int(technique.split()[-1])
+        constant = (constant + n) % size
+    else:
+        n = int(technique.split()[-1])
+        multiplier = pow_mod(n, size-2, size)
+        factor = factor * multiplier % size
+        constant = constant * multiplier % size
+    #print(f'{factor}x + {constant}')
+    #print([((factor * x % size) + (constant % size)) % size for x in range(size)])
+print(f'{factor}x + {constant}')
+
+Coefficients = namedtuple('Coefficients', 'factor constant')
+
+cumulative_coefficients = Coefficients(factor, constant)
+current_coefficients = cumulative_coefficients
+coefficient_multiples = {1: current_coefficients}
+accumulated_shuffles = 1
+current_multiplier = 1
+while accumulated_shuffles < shuffles:
+    if accumulated_shuffles + current_multiplier <= shuffles:
+        factor = (cumulative_coefficients.factor * current_coefficients.factor) % size
+        constant = (cumulative_coefficients.constant * current_coefficients.factor + current_coefficients.constant) % size
+        accumulated_shuffles += current_multiplier
+        cumulative_coefficients = Coefficients(factor, constant)
+        coefficient_multiples[accumulated_shuffles] = cumulative_coefficients
+        current_multiplier *= 2
+        current_coefficients = cumulative_coefficients
+        #print(accumulated_shuffles, current_multiplier)
+        #print(cumulative_coefficients)
+        print((cumulative_coefficients.factor * card % size + cumulative_coefficients.constant % size) % size)
+    else:
+        current_multiplier //= 2
+        current_coefficients = coefficient_multiples[current_multiplier]
+print(cumulative_coefficients)
+print((cumulative_coefficients.factor * card % size + cumulative_coefficients.constant % size) % size)
+
+
+# https://www.reddit.com/r/adventofcode/comments/ee56wh/2019_day_22_part_2_so_whats_the_purpose_of_this/fbr0vjb/?utm_source=share&utm_medium=ios_app&utm_name=ioscss&utm_content=1&utm_term=1&context=3
