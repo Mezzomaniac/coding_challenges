@@ -3,7 +3,7 @@ from os.path import exists
 import requests
 from requests.cookies import RequestsCookieJar
 
-cookie = Cookie(version=0, name='session', value='53616c7465645f5faff8b3e2354b1265816682f3b5f0c6c17dd95acff996106598a987d1eae6ccddecec55fa668aff52682957dcff5dd6cab809255a93ac88d5', port=None, port_specified=False, domain='.adventofcode.com', domain_specified=True, domain_initial_dot=True, path='/', path_specified=True, secure=True, expires=1996992488, discard=False, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
+Cookie(version=0, name='session', value='53616c7465645f5fcb4e4c1852c10cea28e6646bf583e480b524aa14eb2d633a68a0da42d255c951f40c80fada553de6c425db9803cde79a5bd707fea7336fb7', port=None, port_specified=False, domain='.adventofcode.com', domain_specified=True, domain_initial_dot=True, path='/', path_specified=True, secure=True, expires=2014865467, discard=False, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
 cookiejar = RequestsCookieJar()
 cookiejar.set_cookie(cookie)
 
@@ -24,6 +24,8 @@ def get_cookie():
         werkzeug.cached_property = werkzeug.utils.cached_property
     except AttributeError:
         pass
+    import re
+    re._pattern_type = re.Pattern
     # Above is to handle version conflicts
     import robobrowser
     browser = robobrowser.RoboBrowser(parser='html5lib')
@@ -31,11 +33,11 @@ def get_cookie():
     browser.follow_link(browser.get_link('[Log In]'))
     browser.follow_link(browser.get_link('[GitHub]'))
     form = browser.get_form()
-    form['login'].value = input('login?')
-    form['password'].value = input('password?')
+    form['login'].value = input('Github login?')
+    form['password'].value = input('Github password?')
     browser.submit_form(form)
     form2 = browser.get_form()
-    form2['app_otp'].value = input('otp?')
+    form2['app_otp'].value = input('Github 2FA OTP?')
     browser.submit_form(form2)
     cookies = browser.session.cookies
     #print(cookies)
