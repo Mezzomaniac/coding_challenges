@@ -3,7 +3,7 @@ from os.path import exists
 import requests
 from requests.cookies import RequestsCookieJar
 
-cookie = Cookie(version=0, name='session', value='53616c7465645f5f5b28eda769d7bd93c0e83b9c3b4375751384a8429d7440031ebfab2eb0b9ba90293b2c6f5bcdf03b26b131625d98782ea3e1abb9943e3d10', port=None, port_specified=False, domain='.adventofcode.com', domain_specified=True, domain_initial_dot=True, path='/', path_specified=True, secure=True, expires=2019621233, discard=False, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
+cookie = Cookie(version=0, name='session', value='53616c7465645f5faa773833acc6e48badc8f78c5245354f7a04bdbe8aac0a0d71b968b0fe57731947a69ab588664c457b4d04ef326d1426d1b0745a41f768c2', port=None, port_specified=False, domain='.adventofcode.com', domain_specified=True, domain_initial_dot=True, path='/', path_specified=True, secure=True, expires=2029029430, discard=False, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
 cookiejar = RequestsCookieJar()
 cookiejar.set_cookie(cookie)
 
